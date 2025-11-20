@@ -14,13 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+global $CFG;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
-use local_ai_manager\ai_manager_utils;
 use mod_quiz\local\access_rule_base;
 use mod_quiz\quiz_settings;
+use quizaccess_ai\ai_access_handler;
 
 /**
  * A rule preventing access to quiz if AI is not available.
@@ -52,16 +53,10 @@ class quizaccess_ai extends access_rule_base {
         return new self($quizobj, $timenow);
     }
 
-    /**
-     * Prevent new attempts if AI is not available.
-     */
     public function prevent_new_attempt($numprevattempts, $lastattempt) {
         return $this->check_ai_availability();
     }
 
-    /**
-     * Prevent access to the quiz if AI is not available.
-     */
     public function prevent_access() {
         return $this->check_ai_availability();
     }
@@ -73,28 +68,22 @@ class quizaccess_ai extends access_rule_base {
      */
     protected function check_ai_availability() {
         global $USER;
-        $available = ai_manager_utils::AVAILABILITY_AVAILABLE;
-        $required = ['feedback', 'translate'];
+        $handler = \core\di::get(ai_access_handler::class);
         $contextid = $this->quizobj->get_context()->id;
-        $ai_config = ai_manager_utils::get_ai_config($USER, $contextid, null, $required);
 
-        // Check if AI Tools are generally available.
-        if ($ai_config['availability']['available'] !== $available) {
-            return $ai_config['availability']['errormessage'];
+        if ($handler->is_available($USER, $contextid, $this->get_required_purposes())) {
+            return false;
         }
 
-        $missing = [];
-        // Check if all required purposes are available.
-        foreach ($ai_config['purposes'] as $purpose) {
-            if (in_array($purpose['purpose'], $required, true) &&
-                    $purpose['available'] !== $available) {
-                $missing[] = $purpose['purpose'];
-            }
-        }
-        if (!empty($missing)) {
-            return get_string('error_aipurposeunavailable', 'quizaccess_ai',
-                    implode(', ', $missing));
-        }
-        return false;
+        return $handler->get_errormessage();
+    }
+
+    /**
+     * Returns the list of AI purposes required for this quiz.
+     *
+     * @return array
+     */
+    protected function get_required_purposes(): array {
+        return ['feedback', 'translate'];
     }
 }
