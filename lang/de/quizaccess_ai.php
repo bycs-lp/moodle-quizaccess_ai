@@ -27,4 +27,5 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Testzugriffsregel: KI-Verfügbarkeitsprüfung';
 $string['privacy:metadata'] = 'Das Plugin quizaccess_ai speichert keine personenbezogenen Daten.';
-$string['error_aipurposeunavailable'] = 'Die benötigte KI-Funktion („{$a}“) steht derzeit nicht zur Verfügung.';
+$string['error_aigeneralunavailable'] = 'Die KI-Funktionalität steht aktuell nicht zur Verfügung.';
+$string['error_aipurposeunavailable'] = 'Benötigte KI-Funktionalität steht derzeit nicht zur Verfügung:{$a}.';

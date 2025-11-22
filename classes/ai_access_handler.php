@@ -46,9 +46,13 @@ class ai_access_handler {
         $config = $this->fetch_ai_config($user, $contextid, $requiredpurposes);
         
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
-            $this->errormessage = $config['availability']['errormessage'];;
+            $this->errormessage = $config['availability']['errormessage'];
+            if (empty($this->errormessage)) {
+                $this->errormessage = get_string('error_aigeneralunavailable', 'quizaccess_ai');
+            }
             return false;
         }
+        $missing = [];
         foreach ($config['purposes'] as $purpose) {
             if (!in_array($purpose['purpose'], $requiredpurposes, true)) {
                 continue;
@@ -56,10 +60,10 @@ class ai_access_handler {
             if ($purpose['available']=== ai_manager_utils::AVAILABILITY_AVAILABLE) {
                 continue;
             }
-            $this->errormessage = $purpose['errormessage'];
-            return false;
+            $missing[] = $purpose['purpose'];
         }
-        return true;
+        $this->errormessage = get_string('error_aipurposeunavailable', 'quizaccess_ai', implode(', ', $missing));
+        return empty($missing);
     }
 
     /**
