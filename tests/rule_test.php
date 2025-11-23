@@ -27,10 +27,12 @@ require_once($CFG->dirroot . '/mod/quiz/accessrule/ai/rule.php');
 /**
  * Tests for the quizaccess_ai rule.
  *
- * @package   quizaccess_ai
- * @covers    \quizaccess_ai
+ * @package     quizaccess_ai
+ * @copyright   2025, ISB Bayern
+ * @author      Thomas Schönlein
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class test_rule extends \advanced_testcase {
+final class rule_test extends \advanced_testcase {
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
