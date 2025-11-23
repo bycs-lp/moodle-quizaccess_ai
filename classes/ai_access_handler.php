@@ -52,7 +52,8 @@ class ai_access_handler {
             }
             return false;
         }
-        $missing = [];
+        $hidden = [];
+        $disabled = [];
         foreach ($config['purposes'] as $purpose) {
             if (!in_array($purpose['purpose'], $requiredpurposes, true)) {
                 continue;
@@ -60,10 +61,19 @@ class ai_access_handler {
             if ($purpose['available']=== ai_manager_utils::AVAILABILITY_AVAILABLE) {
                 continue;
             }
-            $missing[] = $purpose['purpose'];
+            if ($purpose['available']=== ai_manager_utils::AVAILABILITY_DISABLED) {
+                $disabled[] = $purpose['purpose'];
+                continue;
+            }
+            $hidden[] = $purpose['purpose'];
         }
-        $this->errormessage = get_string('error_aipurposeunavailable', 'quizaccess_ai', implode(', ', $missing));
-        return empty($missing);
+        if (!empty ($hidden)) {
+            $this->errormessage = get_string('error_aipurposeunavailable', 'quizaccess_ai', implode(', ', $hidden));
+        }
+        if (!empty ($disabled)) {
+            $this->errormessage .= get_string('error_purposenotconfigured', 'local_ai_manager', implode(', ', $disabled));
+        }
+        return empty($hidden) && empty($disabled);
     }
 
     /**
