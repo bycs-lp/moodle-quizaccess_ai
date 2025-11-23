@@ -52,8 +52,8 @@ class ai_access_handler {
             }
             return false;
         }
-        $hidden = [];
-        $disabled = [];
+
+        $unavailablemessages = [];
         foreach ($config['purposes'] as $purpose) {
             if (!in_array($purpose['purpose'], $requiredpurposes, true)) {
                 continue;
@@ -61,19 +61,24 @@ class ai_access_handler {
             if ($purpose['available']=== ai_manager_utils::AVAILABILITY_AVAILABLE) {
                 continue;
             }
-            if ($purpose['available']=== ai_manager_utils::AVAILABILITY_DISABLED) {
-                $disabled[] = $purpose['purpose'];
-                continue;
+
+        $message = $purpose['errormessage'] ?? '';
+            if (empty($message)) {
+                if ($purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED) {
+                    $message = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);
+                } else {
+                    $message = get_string('error_aipurposeunavailable', 'quizaccess_ai', $purpose['purpose']);
+                }
             }
-            $hidden[] = $purpose['purpose'];
+            $unavailablemessages[] = $message;
         }
-        if (!empty ($hidden)) {
-            $this->errormessage = get_string('error_aipurposeunavailable', 'quizaccess_ai', implode(', ', $hidden));
+
+        if (!empty($unavailablemessages)) {
+            $this->errormessage = implode(PHP_EOL, $unavailablemessages);
+            return false;
         }
-        if (!empty ($disabled)) {
-            $this->errormessage .= get_string('error_purposenotconfigured', 'local_ai_manager', implode(', ', $disabled));
-        }
-        return empty($hidden) && empty($disabled);
+
+        return true;
     }
 
     /**
