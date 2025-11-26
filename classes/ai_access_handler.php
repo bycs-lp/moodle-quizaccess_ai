@@ -16,8 +16,6 @@
 
 namespace quizaccess_ai;
 
-defined('MOODLE_INTERNAL') || die();
-
 use local_ai_manager\ai_manager_utils;
 use stdClass;
 
@@ -30,7 +28,7 @@ use stdClass;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ai_access_handler {
-
+    /** @var string|null Stores the latest error message when AI is unavailable */
     protected ?string $errormessage = null;
 
     /**
@@ -44,7 +42,7 @@ class ai_access_handler {
     public function is_available(stdClass $user, int $contextid, array $requiredpurposes): bool {
         $this->errormessage = null;
         $config = $this->fetch_ai_config($user, $contextid, $requiredpurposes);
-        
+
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
             $this->errormessage = $config['availability']['errormessage'];
             if (empty($this->errormessage)) {
@@ -58,11 +56,11 @@ class ai_access_handler {
             if (!in_array($purpose['purpose'], $requiredpurposes, true)) {
                 continue;
             }
-            if ($purpose['available']=== ai_manager_utils::AVAILABILITY_AVAILABLE) {
+            if ($purpose['available'] === ai_manager_utils::AVAILABILITY_AVAILABLE) {
                 continue;
             }
 
-        $message = $purpose['errormessage'] ?? '';
+            $message = $purpose['errormessage'] ?? '';
             if (empty($message)) {
                 if ($purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED) {
                     $message = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);

@@ -31,6 +31,7 @@ require_once($CFG->dirroot . '/mod/quiz/accessrule/ai/rule.php');
  * @copyright   2025, ISB Bayern
  * @author      Thomas Schönlein
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @coversDefaultClass \quizaccess_ai
  */
 final class rule_test extends \advanced_testcase {
     protected function setUp(): void {
@@ -44,12 +45,18 @@ final class rule_test extends \advanced_testcase {
         parent::tearDown();
     }
 
+    /**
+     * @covers ::make
+     */
     public function test_make_returns_null_for_empty_quiz(): void {
         $quizobj = $this->mock_quiz_settings(false, []);
 
         $this->assertNull(\quizaccess_ai::make($quizobj, time(), false));
     }
 
+    /**
+     * @covers ::make
+     */
     public function test_make_returns_null_without_ai_questions(): void {
         set_config('backend', 'local_ai_manager', 'qtype_aitext');
         $quizobj = $this->mock_quiz_settings(true, ['multichoice']);
@@ -57,6 +64,9 @@ final class rule_test extends \advanced_testcase {
         $this->assertNull(\quizaccess_ai::make($quizobj, time(), false));
     }
 
+    /**
+     * @covers ::make
+     */
     public function test_make_returns_null_when_ai_manager_not_selected(): void {
         set_config('backend', 'other_backend', 'qtype_aitext');
         $quizobj = $this->mock_quiz_settings(true, ['aitext']);
@@ -64,6 +74,9 @@ final class rule_test extends \advanced_testcase {
         $this->assertNull(\quizaccess_ai::make($quizobj, time(), false));
     }
 
+    /**
+     * @covers ::make
+     */
     public function test_make_creates_rule(): void {
         set_config('backend', 'local_ai_manager', 'qtype_aitext');
         $quizobj = $this->mock_quiz_settings(true, ['aitext', 'multichoice']);
@@ -71,6 +84,10 @@ final class rule_test extends \advanced_testcase {
         $this->assertInstanceOf(\quizaccess_ai::class, \quizaccess_ai::make($quizobj, time(), false));
     }
 
+    /**
+     * @covers ::prevent_access
+     * @covers ::prevent_new_attempt
+     */
     public function test_prevent_access_passes_when_ai_available(): void {
         $rule = $this->create_rule($this->build_handler([
             'availability' => ['available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
@@ -84,6 +101,10 @@ final class rule_test extends \advanced_testcase {
         $this->assertFalse($rule->prevent_new_attempt(0, null));
     }
 
+    /**
+     * @covers ::prevent_access
+     * @covers ::prevent_new_attempt
+     */
     public function test_prevent_access_blocks_when_ai_hidden(): void {
         $rule = $this->create_rule(
             $this->build_handler([
@@ -100,6 +121,10 @@ final class rule_test extends \advanced_testcase {
         $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
 
+    /**
+     * @covers ::prevent_access
+     * @covers ::prevent_new_attempt
+     */
     public function test_prevent_access_blocks_when_ai_disabled(): void {
         $rule = $this->create_rule(
             $this->build_handler([
@@ -115,6 +140,10 @@ final class rule_test extends \advanced_testcase {
         $this->assertSame('ai_manager->errormessage', $rule->prevent_new_attempt(0, null));
     }
 
+    /**
+     * @covers ::prevent_access
+     * @covers ::prevent_new_attempt
+     */
     public function test_prevent_access_blocks_when_required_purpose_hidden(): void {
         $rule = $this->create_rule(
             $this->build_handler([
@@ -131,6 +160,10 @@ final class rule_test extends \advanced_testcase {
         $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
 
+    /**
+     * @covers ::prevent_access
+     * @covers ::prevent_new_attempt
+     */
     public function test_prevent_access_blocks_when_required_purpose_disabled(): void {
         $rule = $this->create_rule(
             $this->build_handler([
@@ -150,6 +183,10 @@ final class rule_test extends \advanced_testcase {
         $this->assertSame('ai_manager->errormessage', $rule->prevent_new_attempt(0, null));
     }
 
+    /**
+     * @covers ::prevent_access
+     * @covers ::prevent_new_attempt
+     */
     public function test_prevent_access_combines_multiple_purpose_messages(): void {
         $rule = $this->create_rule(
             $this->build_handler([
@@ -206,10 +243,27 @@ final class rule_test extends \advanced_testcase {
      * @return ai_access_handler
      */
     protected function build_handler(array $config): ai_access_handler {
-        return new class($config) extends ai_access_handler {
-            public function __construct(private array $config) {
+        return new class ($config) extends ai_access_handler {
+            /** @var array AI configuration stub */
+            private array $config;
+
+            /**
+             * Constructor.
+             *
+             * @param array $config AI configuration stub
+             */
+            public function __construct(array $config) {
+                $this->config = $config;
             }
 
+            /**
+             * Returns the provided configuration.
+             *
+             * @param \stdClass $user
+             * @param int $contextid
+             * @param array $requiredpurposes
+             * @return array
+             */
             protected function fetch_ai_config(\stdClass $user, int $contextid, array $requiredpurposes): array {
                 return $this->config;
             }

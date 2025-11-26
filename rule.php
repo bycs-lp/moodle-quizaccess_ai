@@ -14,8 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-global $CFG;
 defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
 
 require_once($CFG->dirroot . '/mod/quiz/locallib.php');
 
@@ -32,9 +33,13 @@ use quizaccess_ai\ai_access_handler;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quizaccess_ai extends access_rule_base {
-
     /**
      * Factory: returns an instance of this rule if the quiz is suitable, null otherwise.
+     *
+     * @param quiz_settings $quizobj quiz settings object
+     * @param int $timenow current timestamp
+     * @param bool $canignoretimelimits whether time limits can be ignored (unused)
+     * @return access_rule_base|null the rule instance or null if not applicable
      */
     public static function make(quiz_settings $quizobj, $timenow, $canignoretimelimits) {
         if (!$quizobj->has_questions()) {
@@ -53,10 +58,22 @@ class quizaccess_ai extends access_rule_base {
         return new self($quizobj, $timenow);
     }
 
+    /**
+     * Prevents a new attempt if AI is not available.
+     *
+     * @param int $numprevattempts number of previous attempts
+     * @param \stdClass|null $lastattempt the last attempt or null
+     * @return string|bool error message string or false if allowed
+     */
     public function prevent_new_attempt($numprevattempts, $lastattempt) {
         return $this->check_ai_availability();
     }
 
+    /**
+     * Prevents access if AI is not available.
+     *
+     * @return string|bool error message string or false if allowed
+     */
     public function prevent_access() {
         return $this->check_ai_availability();
     }
