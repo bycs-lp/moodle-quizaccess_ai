@@ -46,6 +46,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Ensures make() returns null when no questions exist.
+     *
      * @covers ::make
      */
     public function test_make_returns_null_for_empty_quiz(): void {
@@ -55,6 +57,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Ensures make() returns null when no AI questions are present.
+     *
      * @covers ::make
      */
     public function test_make_returns_null_without_ai_questions(): void {
@@ -65,6 +69,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Ensures make() returns null when the AI backend is not selected.
+     *
      * @covers ::make
      */
     public function test_make_returns_null_when_ai_manager_not_selected(): void {
@@ -75,6 +81,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Ensures make() creates the rule when AI settings are valid.
+     *
      * @covers ::make
      */
     public function test_make_creates_rule(): void {
@@ -85,6 +93,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Verifies access is allowed when AI is available.
+     *
      * @covers ::prevent_access
      * @covers ::prevent_new_attempt
      */
@@ -102,6 +112,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Verifies access is blocked when AI availability is hidden.
+     *
      * @covers ::prevent_access
      * @covers ::prevent_new_attempt
      */
@@ -122,6 +134,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Verifies access is blocked when AI is disabled.
+     *
      * @covers ::prevent_access
      * @covers ::prevent_new_attempt
      */
@@ -141,6 +155,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Verifies access is blocked when a required purpose is hidden.
+     *
      * @covers ::prevent_access
      * @covers ::prevent_new_attempt
      */
@@ -161,6 +177,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Verifies access is blocked when a required purpose is disabled.
+     *
      * @covers ::prevent_access
      * @covers ::prevent_new_attempt
      */
@@ -184,6 +202,8 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Verifies multiple purpose messages are combined.
+     *
      * @covers ::prevent_access
      * @covers ::prevent_new_attempt
      */
