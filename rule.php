@@ -28,7 +28,7 @@ use quizaccess_ai\ai_access_handler;
  * A rule preventing access to quiz if AI is not available.
  *
  * @package   quizaccess_ai
- * @copyright 2025, ISB Bayern
+ * @copyright 2025 ISB Bayern
  * @author    Thomas Schönlein
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -51,6 +51,14 @@ class quizaccess_ai extends access_rule_base {
         if (!in_array('aitext', $qtypes)) {
             return null;
         }
+
+        // Check if plugins aitext and ai_manager are available.
+        $pm = \core_plugin_manager::instance();
+
+        if (!$pm->get_plugin_info('qtype_aitext') || !$pm->get_plugin_info('local_ai_manager')) {
+            return null;
+        }
+
         // Check if the AI backend is configured correctly.
         if (get_config('qtype_aitext', 'backend') !== 'local_ai_manager') {
             return null;
@@ -88,11 +96,8 @@ class quizaccess_ai extends access_rule_base {
         $handler = \core\di::get(ai_access_handler::class);
         $contextid = $this->quizobj->get_context()->id;
 
-        if ($handler->is_available($USER, $contextid, $this->get_required_purposes())) {
-            return false;
-        }
-
-        return $handler->get_errormessage();
+        $availability = $handler->is_available($USER, $contextid, $this->get_required_purposes());
+        return $availability === true ? false : $availability;
     }
 
     /**

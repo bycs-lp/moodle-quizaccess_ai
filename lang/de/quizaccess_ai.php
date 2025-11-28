@@ -18,7 +18,7 @@
  * Strings for the quizaccess_ai plugin.
  *
  * @package    quizaccess_ai
- * @copyright  2025, ISB Bayern
+ * @copyright  2025 ISB Bayern
  * @author     Thomas Schönlein
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,5 +26,5 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['error_aipurposeunavailable'] = 'Benötigte KI-Funktionalität {$a} steht derzeit nicht zur Verfügung.';
-$string['pluginname'] = 'Testzugriffsregel: KI-Verfügbarkeitsprüfung';
+$string['pluginname'] = 'KI-Verfügbarkeit';
 $string['privacy:metadata'] = 'Das Plugin quizaccess_ai speichert keine personenbezogenen Daten.';

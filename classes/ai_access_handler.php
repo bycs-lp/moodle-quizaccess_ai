@@ -20,35 +20,31 @@ use local_ai_manager\ai_manager_utils;
 use stdClass;
 
 /**
- * Helper class that encapsulates the AI availability check for quizaccess_ai.
+ * Checks and fetches the AI availability state for quizaccess_ai.
  *
  * @package   quizaccess_ai
- * @copyright 2025, ISB Bayern
+ * @copyright 2025 ISB Bayern
  * @author    Thomas Schönlein
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ai_access_handler {
-    /** @var string|null Stores the latest error message when AI is unavailable */
-    protected ?string $errormessage = null;
-
     /**
      * Checks whether the AI features required for this quiz are available.
      *
      * @param stdClass $user The user for whom the availability should be checked.
      * @param int $contextid The context id of the quiz.
      * @param array $requiredpurposes Purposes that must be enabled.
-     * @return bool True when AI is available, false otherwise.
+     * @return bool|string True when AI is available, error message otherwise.
      */
-    public function is_available(stdClass $user, int $contextid, array $requiredpurposes): bool {
-        $this->errormessage = null;
-        $config = $this->fetch_ai_config($user, $contextid, $requiredpurposes);
+    public function is_available(stdClass $user, int $contextid, array $requiredpurposes): bool|string {
+        $config = ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
 
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
-            $this->errormessage = $config['availability']['errormessage'];
-            if (empty($this->errormessage)) {
-                $this->errormessage = get_string('error_tenantdisabled', 'local_ai_manager');
+            $message = $config['availability']['errormessage'];
+            if (empty($message)) {
+                $message = get_string('error_tenantdisabled', 'local_ai_manager');
             }
-            return false;
+            return $message;
         }
 
         $unavailablemessages = [];
@@ -62,7 +58,7 @@ class ai_access_handler {
                 continue;
             }
 
-            $message = $purpose['errormessage'] ?? '';
+            $message = $purpose['errormessage'];
             $blockmessage = get_string('notallowedincourse', 'block_ai_control', $purpose['purpose']);
             $defaultnotconfigured = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);
 
@@ -104,31 +100,10 @@ class ai_access_handler {
         if (!empty($unavailablemessages)) {
             // Remove duplicate messages.
             $unavailablemessages = array_values(array_unique($unavailablemessages));
-            $this->errormessage = implode(PHP_EOL, $unavailablemessages);
-            return false;
+            return \html_writer::alist($unavailablemessages);
         }
 
         return true;
     }
 
-    /**
-     * Returns the error message if AI is not available.
-     *
-     * @return string|null
-     */
-    public function get_errormessage(): ?string {
-        return $this->errormessage;
-    }
-
-    /**
-     * Retrieves the configuration from the AI manager.
-     *
-     * @param stdClass $user
-     * @param int $contextid
-     * @param array $requiredpurposes
-     * @return array
-     */
-    protected function fetch_ai_config(stdClass $user, int $contextid, array $requiredpurposes): array {
-        return ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
-    }
 }

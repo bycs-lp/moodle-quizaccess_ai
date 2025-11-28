@@ -18,7 +18,7 @@
  * Version information for the quizaccess_ai plugin.
  *
  * @package    quizaccess_ai
- * @copyright  2025, ISB Bayern
+ * @copyright  2025 ISB Bayern
  * @author     Thomas Schönlein
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
