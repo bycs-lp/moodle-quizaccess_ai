@@ -122,13 +122,13 @@ final class rule_test extends \advanced_testcase {
             $this->build_handler([
                 'availability' => [
                     'available' => ai_manager_utils::AVAILABILITY_HIDDEN,
-                    'errormessage' => '',
+                    'errormessage' => get_string('error_tenantdisabled', 'local_ai_manager'),
                 ],
                 'purposes' => [],
             ])
         );
 
-        $expected = get_string('error_aigeneralunavailable', 'quizaccess_ai');
+        $expected = get_string('error_tenantdisabled', 'local_ai_manager');
         $this->assertSame($expected, $rule->prevent_access());
         $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
