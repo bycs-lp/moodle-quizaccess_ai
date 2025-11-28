@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 use mod_quiz\local\access_rule_base;
 use mod_quiz\quiz_settings;
 use quizaccess_ai\ai_access_handler;
