@@ -33,10 +33,11 @@ class ai_access_handler {
      *
      * @param stdClass $user The user for whom the availability should be checked.
      * @param int $contextid The context id of the quiz.
-     * @param array $requiredpurposes Purposes that must be enabled.
+     * @param array|null $requiredpurposes Purposes that must be enabled. If null, defaults are used.
      * @return bool|string True when AI is available, error message otherwise.
      */
-    public function is_available(stdClass $user, int $contextid, array $requiredpurposes): bool|string {
+    public function is_available(stdClass $user, int $contextid, ?array $requiredpurposes = null): bool|string {
+        $requiredpurposes = $requiredpurposes ?? $this->get_required_purposes();
         $config = ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
 
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
@@ -106,4 +107,12 @@ class ai_access_handler {
         return true;
     }
 
+    /**
+     * Required AI purposes for this rule.
+     *
+     * @return array
+     */
+    public function get_required_purposes(): array {
+        return ['feedback', 'translate'];
+    }
 }

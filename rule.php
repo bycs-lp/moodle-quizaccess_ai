@@ -92,16 +92,7 @@ class quizaccess_ai extends access_rule_base {
         $handler = \core\di::get(ai_access_handler::class);
         $contextid = $this->quizobj->get_context()->id;
 
-        $availability = $handler->is_available($USER, $contextid, $this->get_required_purposes());
+        $availability = $handler->is_available($USER, $contextid);
         return $availability === true ? false : $availability;
-    }
-
-    /**
-     * Returns the list of AI purposes required for this quiz.
-     *
-     * @return array
-     */
-    protected function get_required_purposes(): array {
-        return ['feedback', 'translate'];
     }
 }
