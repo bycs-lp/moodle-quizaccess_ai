@@ -46,12 +46,14 @@ class ai_access_handler {
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
             $this->errormessage = $config['availability']['errormessage'];
             if (empty($this->errormessage)) {
-                $this->errormessage = get_string('error_aigeneralunavailable', 'quizaccess_ai');
+                $this->errormessage = get_string('error_tenantdisabled', 'local_ai_manager');
             }
             return false;
         }
 
         $unavailablemessages = [];
+        $blockedbycontrol = [];
+        $notconfiguredpurposes = [];
         foreach ($config['purposes'] as $purpose) {
             if (!in_array($purpose['purpose'], $requiredpurposes, true)) {
                 continue;
@@ -61,17 +63,45 @@ class ai_access_handler {
             }
 
             $message = $purpose['errormessage'] ?? '';
+            $blockmessage = get_string('notallowedincourse', 'block_ai_control', $purpose['purpose']);
+            $defaultnotconfigured = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);
+
+            if ($purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED &&
+                (empty($message) || $message === $defaultnotconfigured)) {
+                $notconfiguredpurposes[] = $purpose['purpose'];
+                continue;
+            }
+
             if (empty($message)) {
-                if ($purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED) {
-                    $message = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);
-                } else {
-                    $message = get_string('error_aipurposeunavailable', 'quizaccess_ai', $purpose['purpose']);
-                }
+                $message = get_string('error_aipurposeunavailable', 'quizaccess_ai', $purpose['purpose']);
+            }
+
+            if ($message === $blockmessage) {
+                $blockedbycontrol[] = $purpose['purpose'];
+                continue;
             }
             $unavailablemessages[] = $message;
         }
 
+        if (!empty($blockedbycontrol)) {
+            $unavailablemessages[] = get_string(
+                'notallowedincourse',
+                'block_ai_control',
+                implode(', ', $blockedbycontrol)
+            );
+        }
+
+        if (!empty($notconfiguredpurposes)) {
+            $unavailablemessages[] = get_string(
+                'error_purposenotconfigured',
+                'local_ai_manager',
+                implode(', ', $notconfiguredpurposes)
+            );
+        }
+
         if (!empty($unavailablemessages)) {
+            // Remove duplicate messages.
+            $unavailablemessages = array_values(array_unique($unavailablemessages));
             $this->errormessage = implode(PHP_EOL, $unavailablemessages);
             return false;
         }
