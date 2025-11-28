@@ -28,7 +28,7 @@ require_once($CFG->dirroot . '/mod/quiz/accessrule/ai/rule.php');
  * Tests for the quizaccess_ai rule.
  *
  * @package     quizaccess_ai
- * @copyright   2025, ISB Bayern
+ * @copyright   2025 ISB Bayern
  * @author      Thomas Schönlein
  * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @coversDefaultClass \quizaccess_ai
@@ -37,12 +37,6 @@ final class rule_test extends \advanced_testcase {
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
-        \core\di::reset_container();
-    }
-
-    protected function tearDown(): void {
-        \core\di::reset_container();
-        parent::tearDown();
     }
 
     /**

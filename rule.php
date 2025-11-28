@@ -16,10 +16,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG;
-
-require_once($CFG->dirroot . '/mod/quiz/locallib.php');
-
 use mod_quiz\local\access_rule_base;
 use mod_quiz\quiz_settings;
 use quizaccess_ai\ai_access_handler;
