@@ -66,8 +66,10 @@ class ai_access_handler {
             $blockmessage = get_string('notallowedincourse', 'block_ai_control', $purpose['purpose']);
             $defaultnotconfigured = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);
 
-            if ($purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED &&
-                (empty($message) || $message === $defaultnotconfigured)) {
+            if (
+                $purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED
+                && (empty($message) || $message === $defaultnotconfigured)
+            ) {
                 $notconfiguredpurposes[] = $purpose['purpose'];
                 continue;
             }
