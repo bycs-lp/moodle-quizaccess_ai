@@ -61,7 +61,6 @@ jobs:
       - name: Install moodle-plugin-ci
         run: |
           moodle-plugin-ci add-plugin bycs-lp/moodle-local_ai_manager
-          moodle-plugin-ci add-plugin moodle/moodle#qtype_aitext
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ matrix.database }}
