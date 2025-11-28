@@ -144,8 +144,9 @@ final class rule_test extends \advanced_testcase {
             ])
         );
 
-        $this->assertSame('ai_manager->errormessage', $rule->prevent_access());
-        $this->assertSame('ai_manager->errormessage', $rule->prevent_new_attempt(0, null));
+        $expected = 'ai_manager->errormessage';
+        $this->assertSame($expected, $rule->prevent_access());
+        $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
 
     /**
@@ -191,8 +192,9 @@ final class rule_test extends \advanced_testcase {
             ])
         );
 
-        $this->assertSame('ai_manager->errormessage', $rule->prevent_access());
-        $this->assertSame('ai_manager->errormessage', $rule->prevent_new_attempt(0, null));
+        $expected = 'ai_manager->errormessage';
+        $this->assertSame($expected, $rule->prevent_access());
+        $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
 
     /**
@@ -220,7 +222,7 @@ final class rule_test extends \advanced_testcase {
             ])
         );
 
-        $expected = implode(PHP_EOL, [
+        $expected = \html_writer::alist([
             get_string('error_aipurposeunavailable', 'quizaccess_ai', 'feedback'),
             'translate disabled',
         ]);

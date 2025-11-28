@@ -38,7 +38,7 @@ class ai_access_handler {
      */
     public function is_available(stdClass $user, int $contextid, ?array $requiredpurposes = null): bool|string {
         $requiredpurposes = $requiredpurposes ?? $this->get_required_purposes();
-        $config = ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
+        $config = $this->fetch_ai_config($user, $contextid, $requiredpurposes);
 
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
             $message = $config['availability']['errormessage'];
@@ -89,7 +89,6 @@ class ai_access_handler {
                 implode(', ', $blockedbycontrol)
             );
         }
-
         if (!empty($notconfiguredpurposes)) {
             $unavailablemessages[] = get_string(
                 'error_purposenotconfigured',
@@ -101,6 +100,9 @@ class ai_access_handler {
         if (!empty($unavailablemessages)) {
             // Remove duplicate messages.
             $unavailablemessages = array_values(array_unique($unavailablemessages));
+            if (count($unavailablemessages) === 1) {
+                return $unavailablemessages[0];
+            }
             return \html_writer::alist($unavailablemessages);
         }
 
@@ -114,5 +116,18 @@ class ai_access_handler {
      */
     public function get_required_purposes(): array {
         return ['feedback', 'translate'];
+    }
+
+    /**
+     * Retrieves the configuration from the AI manager.
+     * Split out so tests can override and inject configs without changing the main logic.
+     *
+     * @param stdClass $user
+     * @param int $contextid
+     * @param array $requiredpurposes
+     * @return array
+     */
+    protected function fetch_ai_config(stdClass $user, int $contextid, array $requiredpurposes): array {
+        return ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
     }
 }
