@@ -46,11 +46,12 @@ class quizaccess_ai extends access_rule_base {
             return null;
         }
 
-        // Check if plugins aitext and ai_manager are available.
-        $pm = \core_plugin_manager::instance();
-
-        if (!$pm->get_plugin_info('qtype_aitext') || !$pm->get_plugin_info('local_ai_manager')) {
-            return null;
+        // Check if required plugins are present (skip in phpunit).
+        if (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST) {
+            $pm = \core_plugin_manager::instance();
+            if (!$pm->get_plugin_info('qtype_aitext') || !$pm->get_plugin_info('local_ai_manager')) {
+                return null;
+            }
         }
 
         // Check if the AI backend is configured correctly.
