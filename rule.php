@@ -56,6 +56,10 @@ class quizaccess_ai extends access_rule_base {
         return $this->check_ai_availability();
     }
 
+    /**
+     * Runs when a user accesses an existing attempt (view, attempt, or summary page).
+     * Review pages are not covered.
+     */
     #[\Override]
     public function prevent_access() {
         return $this->check_ai_availability();
