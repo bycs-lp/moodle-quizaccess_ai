@@ -16,7 +16,6 @@
 
 namespace quizaccess_ai;
 
-use local_ai_manager\ai_manager_utils;
 use mod_quiz\quiz_settings;
 
 defined('MOODLE_INTERNAL') || die();
@@ -37,6 +36,11 @@ final class rule_test extends \advanced_testcase {
     protected function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
+    }
+
+    protected function tearDown(): void {
+        \core\di::set(ai_access_handler::class, new ai_access_handler());
+        parent::tearDown();
     }
 
     /**
@@ -69,9 +73,51 @@ final class rule_test extends \advanced_testcase {
      */
     public function test_make_returns_null_when_ai_manager_not_selected(): void {
         set_config('backend', 'other_backend', 'qtype_aitext');
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        \core\di::set(ai_access_handler::class, $handler);
         $quizobj = $this->mock_quiz_settings(true, ['aitext']);
 
         $this->assertNull(\quizaccess_ai::make($quizobj, time(), false));
+
+        \core\di::set(ai_access_handler::class, new ai_access_handler());
+    }
+
+    /**
+     * Ensures make() returns null when qtype_aitext is not available.
+     *
+     * @covers ::make
+     */
+    public function test_make_returns_null_when_aitext_not_available(): void {
+        set_config('backend', 'local_ai_manager', 'qtype_aitext');
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_aitext_available')->willReturn(false);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        \core\di::set(ai_access_handler::class, $handler);
+        $quizobj = $this->mock_quiz_settings(true, ['aitext']);
+
+        $this->assertNull(\quizaccess_ai::make($quizobj, time(), false));
+
+        \core\di::set(ai_access_handler::class, new ai_access_handler());
+    }
+
+    /**
+     * Ensures make() returns null when local_ai_manager is not available.
+     *
+     * @covers ::make
+     */
+    public function test_make_returns_null_when_ai_manager_not_available(): void {
+        set_config('backend', 'local_ai_manager', 'qtype_aitext');
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(false);
+        \core\di::set(ai_access_handler::class, $handler);
+        $quizobj = $this->mock_quiz_settings(true, ['aitext']);
+
+        $this->assertNull(\quizaccess_ai::make($quizobj, time(), false));
+
+        \core\di::set(ai_access_handler::class, new ai_access_handler());
     }
 
     /**
@@ -81,9 +127,15 @@ final class rule_test extends \advanced_testcase {
      */
     public function test_make_creates_rule(): void {
         set_config('backend', 'local_ai_manager', 'qtype_aitext');
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        \core\di::set(ai_access_handler::class, $handler);
         $quizobj = $this->mock_quiz_settings(true, ['aitext', 'multichoice']);
 
         $this->assertInstanceOf(\quizaccess_ai::class, \quizaccess_ai::make($quizobj, time(), false));
+
+        \core\di::set(ai_access_handler::class, new ai_access_handler());
     }
 
     /**
@@ -93,13 +145,8 @@ final class rule_test extends \advanced_testcase {
      * @covers ::prevent_new_attempt
      */
     public function test_prevent_access_passes_when_ai_available(): void {
-        $rule = $this->create_rule($this->build_handler([
-            'availability' => ['available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-            'purposes' => [
-                ['purpose' => 'feedback', 'available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-                ['purpose' => 'translate', 'available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-            ],
-        ]));
+        $handler = $this->mock_handler_with_availability(true);
+        $rule = $this->create_rule($handler);
 
         $this->assertFalse($rule->prevent_access());
         $this->assertFalse($rule->prevent_new_attempt(0, null));
@@ -112,15 +159,8 @@ final class rule_test extends \advanced_testcase {
      * @covers ::prevent_new_attempt
      */
     public function test_prevent_access_blocks_when_ai_hidden(): void {
-        $rule = $this->create_rule(
-            $this->build_handler([
-                'availability' => [
-                    'available' => ai_manager_utils::AVAILABILITY_HIDDEN,
-                    'errormessage' => get_string('error_tenantdisabled', 'local_ai_manager'),
-                ],
-                'purposes' => [],
-            ])
-        );
+        $handler = $this->mock_handler_with_availability(get_string('error_tenantdisabled', 'local_ai_manager'));
+        $rule = $this->create_rule($handler);
 
         $expected = get_string('error_tenantdisabled', 'local_ai_manager');
         $this->assertSame($expected, $rule->prevent_access());
@@ -134,17 +174,10 @@ final class rule_test extends \advanced_testcase {
      * @covers ::prevent_new_attempt
      */
     public function test_prevent_access_blocks_when_ai_disabled(): void {
-        $rule = $this->create_rule(
-            $this->build_handler([
-                'availability' => [
-                    'available' => ai_manager_utils::AVAILABILITY_DISABLED,
-                    'errormessage' => 'ai_manager->errormessage',
-                ],
-                'purposes' => [],
-            ])
-        );
+        $handler = $this->mock_handler_with_availability('AI access is disabled for this user');
+        $rule = $this->create_rule($handler);
 
-        $expected = 'ai_manager->errormessage';
+        $expected = 'AI access is disabled for this user';
         $this->assertSame($expected, $rule->prevent_access());
         $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
@@ -156,15 +189,13 @@ final class rule_test extends \advanced_testcase {
      * @covers ::prevent_new_attempt
      */
     public function test_prevent_access_blocks_when_required_purpose_hidden(): void {
-        $rule = $this->create_rule(
-            $this->build_handler([
-                'availability' => ['available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-                'purposes' => [
-                    ['purpose' => 'feedback', 'available' => ai_manager_utils::AVAILABILITY_HIDDEN, 'errormessage' => ''],
-                    ['purpose' => 'translate', 'available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-                ],
-            ])
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_available')->willReturn(
+            get_string('error_aipurposeunavailable', 'quizaccess_ai', 'feedback')
         );
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        $rule = $this->create_rule($handler);
 
         $expected = get_string('error_aipurposeunavailable', 'quizaccess_ai', 'feedback');
         $this->assertSame($expected, $rule->prevent_access());
@@ -178,21 +209,13 @@ final class rule_test extends \advanced_testcase {
      * @covers ::prevent_new_attempt
      */
     public function test_prevent_access_blocks_when_required_purpose_disabled(): void {
-        $rule = $this->create_rule(
-            $this->build_handler([
-                'availability' => ['available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-                'purposes' => [
-                    [
-                        'purpose' => 'feedback',
-                        'available' => ai_manager_utils::AVAILABILITY_DISABLED,
-                        'errormessage' => 'ai_manager->errormessage',
-                    ],
-                    ['purpose' => 'translate', 'available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-                ],
-            ])
-        );
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_available')->willReturn('AI access is disabled for this user');
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        $rule = $this->create_rule($handler);
 
-        $expected = 'ai_manager->errormessage';
+        $expected = 'AI access is disabled for this user';
         $this->assertSame($expected, $rule->prevent_access());
         $this->assertSame($expected, $rule->prevent_new_attempt(0, null));
     }
@@ -204,23 +227,16 @@ final class rule_test extends \advanced_testcase {
      * @covers ::prevent_new_attempt
      */
     public function test_prevent_access_combines_multiple_purpose_messages(): void {
-        $rule = $this->create_rule(
-            $this->build_handler([
-                'availability' => ['available' => ai_manager_utils::AVAILABILITY_AVAILABLE],
-                'purposes' => [
-                    [
-                        'purpose' => 'feedback',
-                        'available' => ai_manager_utils::AVAILABILITY_HIDDEN,
-                        'errormessage' => '',
-                    ],
-                    [
-                        'purpose' => 'translate',
-                        'available' => ai_manager_utils::AVAILABILITY_DISABLED,
-                        'errormessage' => 'translate disabled',
-                    ],
-                ],
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_available')->willReturn(
+            \html_writer::alist([
+                get_string('error_aipurposeunavailable', 'quizaccess_ai', 'feedback'),
+                'translate disabled',
             ])
         );
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        $rule = $this->create_rule($handler);
 
         $expected = \html_writer::alist([
             get_string('error_aipurposeunavailable', 'quizaccess_ai', 'feedback'),
@@ -237,7 +253,7 @@ final class rule_test extends \advanced_testcase {
      * @param ai_access_handler $handler
      * @return \quizaccess_ai
      */
-    protected function create_rule(ai_access_handler $handler): \quizaccess_ai {
+    private function create_rule(ai_access_handler $handler): \quizaccess_ai {
         \core\di::set(ai_access_handler::class, $handler);
         $this->setAdminUser();
 
@@ -253,37 +269,16 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
-     * Builds a handler stub that always returns the provided AI configuration.
+     * Creates a handler mock that returns a fixed availability result.
      *
-     * @param array $config
-     * @return ai_access_handler
+     * @param bool|string $result True when AI is available, or an error message string otherwise.
      */
-    protected function build_handler(array $config): ai_access_handler {
-        return new class ($config) extends ai_access_handler {
-            /** @var array AI configuration stub */
-            private array $config;
-
-            /**
-             * Constructor.
-             *
-             * @param array $config AI configuration stub
-             */
-            public function __construct(array $config) {
-                $this->config = $config;
-            }
-
-            /**
-             * Returns the provided configuration.
-             *
-             * @param \stdClass $user
-             * @param int $contextid
-             * @param array $requiredpurposes
-             * @return array
-             */
-            protected function fetch_ai_config(\stdClass $user, int $contextid, array $requiredpurposes): array {
-                return $this->config;
-            }
-        };
+    private function mock_handler_with_availability(bool|string $result): ai_access_handler {
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_available')->willReturn($result);
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        return $handler;
     }
 
     /**
@@ -293,7 +288,7 @@ final class rule_test extends \advanced_testcase {
      * @param array $qtypes
      * @return quiz_settings
      */
-    protected function mock_quiz_settings(bool $hasquestions, array $qtypes): quiz_settings {
+    private function mock_quiz_settings(bool $hasquestions, array $qtypes): quiz_settings {
         $quiz = (object)[
             'id' => 1,
             'timeclose' => 0,

@@ -38,7 +38,7 @@ class ai_access_handler {
      */
     public function is_available(stdClass $user, int $contextid, ?array $requiredpurposes = null): bool|string {
         $requiredpurposes = $requiredpurposes ?? $this->get_required_purposes();
-        $config = $this->fetch_ai_config($user, $contextid, $requiredpurposes);
+        $config = ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
 
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
             $message = $config['availability']['errormessage'];
@@ -110,6 +110,26 @@ class ai_access_handler {
     }
 
     /**
+     * Checks if qtype_aitext plugin is available.
+     *
+     * @return bool
+     */
+    public function is_aitext_available(): bool {
+        $pm = \core_plugin_manager::instance();
+        return (bool)$pm->get_plugin_info('qtype_aitext');
+    }
+
+    /**
+     * Checks if local_ai_manager plugin is available.
+     *
+     * @return bool
+     */
+    public function is_ai_manager_available(): bool {
+        $pm = \core_plugin_manager::instance();
+        return (bool)$pm->get_plugin_info('local_ai_manager');
+    }
+
+    /**
      * Required AI purposes for this rule.
      *
      * @return array
@@ -118,16 +138,4 @@ class ai_access_handler {
         return ['feedback', 'translate'];
     }
 
-    /**
-     * Retrieves the configuration from the AI manager.
-     * Split out so tests can override and inject configs without changing the main logic.
-     *
-     * @param stdClass $user
-     * @param int $contextid
-     * @param array $requiredpurposes
-     * @return array
-     */
-    protected function fetch_ai_config(stdClass $user, int $contextid, array $requiredpurposes): array {
-        return ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
-    }
 }

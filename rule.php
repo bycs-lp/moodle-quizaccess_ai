@@ -27,14 +27,7 @@ use quizaccess_ai\ai_access_handler;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class quizaccess_ai extends access_rule_base {
-    /**
-     * Factory: returns an instance of this rule if the quiz is suitable, null otherwise.
-     *
-     * @param quiz_settings $quizobj quiz settings object
-     * @param int $timenow current timestamp
-     * @param bool $canignoretimelimits whether time limits can be ignored (unused)
-     * @return access_rule_base|null the rule instance or null if not applicable
-     */
+    #[\Override]
     public static function make(quiz_settings $quizobj, $timenow, $canignoretimelimits) {
         if (!$quizobj->has_questions()) {
             return null;
@@ -46,12 +39,9 @@ class quizaccess_ai extends access_rule_base {
             return null;
         }
 
-        // Check if required plugins are present (skip in phpunit).
-        if (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST) {
-            $pm = \core_plugin_manager::instance();
-            if (!$pm->get_plugin_info('qtype_aitext') || !$pm->get_plugin_info('local_ai_manager')) {
-                return null;
-            }
+        $handler = \core\di::get(ai_access_handler::class);
+        if (!$handler->is_aitext_available() || !$handler->is_ai_manager_available()) {
+            return null;
         }
 
         // Check if the AI backend is configured correctly.
@@ -61,22 +51,12 @@ class quizaccess_ai extends access_rule_base {
         return new self($quizobj, $timenow);
     }
 
-    /**
-     * Prevents a new attempt if AI is not available.
-     *
-     * @param int $numprevattempts number of previous attempts
-     * @param \stdClass|null $lastattempt the last attempt or null
-     * @return string|bool error message string or false if allowed
-     */
+    #[\Override]
     public function prevent_new_attempt($numprevattempts, $lastattempt) {
         return $this->check_ai_availability();
     }
 
-    /**
-     * Prevents access if AI is not available.
-     *
-     * @return string|bool error message string or false if allowed
-     */
+    #[\Override]
     public function prevent_access() {
         return $this->check_ai_availability();
     }
