@@ -137,5 +137,4 @@ class ai_access_handler {
     public function get_required_purposes(): array {
         return ['feedback', 'translate'];
     }
-
 }
