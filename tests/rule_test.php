@@ -59,7 +59,7 @@ final class rule_test extends \advanced_testcase {
      *
      * @covers ::make
      */
-    public function test_make_returns_null_without_ai_questions(): void {
+    public function test_make_returns_null_without_aitext_questions(): void {
         set_config('backend', 'local_ai_manager', 'qtype_aitext');
         $quizobj = $this->mock_quiz_settings(true, ['multichoice']);
 

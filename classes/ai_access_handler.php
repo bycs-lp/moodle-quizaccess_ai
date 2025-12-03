@@ -30,20 +30,22 @@ use stdClass;
 class ai_access_handler {
     /**
      * Checks whether the AI features required for this quiz are available.
+     * Only validates availability for local_ai_manager (core AI backends not handled yet).
      *
-     * @param stdClass $user The user for whom the availability should be checked.
      * @param int $contextid The context id of the quiz.
      * @param array|null $requiredpurposes Purposes that must be enabled. If null, defaults are used.
      * @return bool|string True when AI is available, error message otherwise.
      */
-    public function is_available(stdClass $user, int $contextid, ?array $requiredpurposes = null): bool|string {
-        $requiredpurposes = $requiredpurposes ?? $this->get_required_purposes();
-        $config = ai_manager_utils::get_ai_config($user, $contextid, null, $requiredpurposes);
+    public function is_available(int $contextid, ?array $requiredpurposes = null): bool|string {
+        // Currently only validates qtype_aitext together with local_ai_manager (core AI not covered yet).
+        global $USER;
+        $requiredpurposes = $requiredpurposes ?? $this->get_aitext_required_purposes();
+        $config = ai_manager_utils::get_ai_config($USER, $contextid, null, $requiredpurposes);
 
         if ($config['availability']['available'] !== ai_manager_utils::AVAILABILITY_AVAILABLE) {
             $message = $config['availability']['errormessage'];
             if (empty($message)) {
-                $message = get_string('error_tenantdisabled', 'local_ai_manager');
+                $message = get_string('error_aimanagerunavailable', 'quizaccess_ai');
             }
             return $message;
         }
@@ -65,7 +67,7 @@ class ai_access_handler {
 
             if (
                 $purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED
-                && (empty($message) || $message === $defaultnotconfigured)
+                && $message === $defaultnotconfigured
             ) {
                 $notconfiguredpurposes[] = $purpose['purpose'];
                 continue;
@@ -116,25 +118,37 @@ class ai_access_handler {
      */
     public function is_aitext_available(): bool {
         $pm = \core_plugin_manager::instance();
-        return (bool)$pm->get_plugin_info('qtype_aitext');
+
+        $installed = $pm->get_installed_plugins('qtype');
+        if (!array_key_exists('aitext', $installed)) {
+            return false;
+        }
+        $info = $pm->get_plugin_info('qtype_aitext');
+        return $info && $info->is_enabled();
     }
 
     /**
-     * Checks if local_ai_manager plugin is available.
+     * Checks if local_ai_manager plugin is available and enabled.
+     * Kept as a dedicated method to be easily mocked in tests; core AI would differ.
      *
      * @return bool
      */
     public function is_ai_manager_available(): bool {
         $pm = \core_plugin_manager::instance();
+        $installed = $pm->get_installed_plugins('local');
+        if(!array_key_exists('ai_manager',$installed)) {
+            return false;
+        }
         return (bool)$pm->get_plugin_info('local_ai_manager');
     }
 
     /**
      * Required AI purposes for this rule.
+     * These are the purposes qtype_aitext needs when using local_ai_manager.
      *
      * @return array
      */
-    public function get_required_purposes(): array {
+    public function get_aitext_required_purposes(): array {
         return ['feedback', 'translate'];
     }
 }

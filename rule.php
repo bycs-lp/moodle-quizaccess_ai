@@ -40,12 +40,16 @@ class quizaccess_ai extends access_rule_base {
         }
 
         $handler = \core\di::get(ai_access_handler::class);
-        if (!$handler->is_aitext_available() || !$handler->is_ai_manager_available()) {
+        if (!$handler->is_aitext_available()) {
             return null;
         }
 
         // Check if the AI backend is configured correctly.
         if (get_config('qtype_aitext', 'backend') !== 'local_ai_manager') {
+            return null;
+        }
+
+        if (!$handler->is_ai_manager_available()) {
             return null;
         }
         return new self($quizobj, $timenow);
@@ -75,7 +79,7 @@ class quizaccess_ai extends access_rule_base {
         $handler = \core\di::get(ai_access_handler::class);
         $contextid = $this->quizobj->get_context()->id;
 
-        $availability = $handler->is_available($USER, $contextid);
+        $availability = $handler->is_available($contextid);
         return $availability === true ? false : $availability;
     }
 }
