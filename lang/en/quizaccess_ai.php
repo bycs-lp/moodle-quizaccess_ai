@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['error_aipurposeunavailable'] = 'Required AI functionality is not available: {$a}.';
 $string['error_aimanagerunavailable'] = 'AI functionality is not available right now. Please contact your ByCS-administrator.';
+$string['error_aipurposeunavailable'] = 'Required AI functionality is not available: {$a}.';
 $string['pluginname'] = 'AI availability';
 $string['privacy:metadata'] = 'The quizaccess_ai plugin does not store any personal data.';

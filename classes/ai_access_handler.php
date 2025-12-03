@@ -136,7 +136,7 @@ class ai_access_handler {
     public function is_ai_manager_available(): bool {
         $pm = \core_plugin_manager::instance();
         $installed = $pm->get_installed_plugins('local');
-        if(!array_key_exists('ai_manager',$installed)) {
+        if (!array_key_exists('ai_manager', $installed)) {
             return false;
         }
         return (bool)$pm->get_plugin_info('local_ai_manager');
