@@ -26,6 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['error_aimanagerunavailable'] = 'Die KI-Funktionalitäten stehen derzeit nicht zur Verfügung. Bitte wenden Sie sich an Ihren Tenant-Manager oder Admin.';
-$string['error_aipurposeunavailable'] = 'Die benötigte KI-Funktionalität "{$a}" ist im Kontrollzentrum des Kurses nicht aktiviert.';
+$string['error_aipurposeunavailable'] = 'Der benötigte KI-Einsatzzweck "{$a}" ist nicht verfügbar.';
 $string['pluginname'] = 'KI-Verfügbarkeit';
 $string['privacy:metadata'] = 'Das Plugin quizaccess_ai speichert keine personenbezogenen Daten.';
