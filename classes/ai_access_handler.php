@@ -51,8 +51,6 @@ class ai_access_handler {
         }
 
         $unavailablemessages = [];
-        $blockedbycontrol = [];
-        $notconfiguredpurposes = [];
         foreach ($config['purposes'] as $purpose) {
             if (!in_array($purpose['purpose'], $requiredpurposes, true)) {
                 continue;
@@ -61,42 +59,11 @@ class ai_access_handler {
                 continue;
             }
 
-            $message = $purpose['errormessage'];
-            $blockmessage = get_string('notallowedincourse', 'block_ai_control', $purpose['purpose']);
-            $defaultnotconfigured = get_string('error_purposenotconfigured', 'local_ai_manager', $purpose['purpose']);
-
-            if (
-                $purpose['available'] === ai_manager_utils::AVAILABILITY_DISABLED
-                && $message === $defaultnotconfigured
-            ) {
-                $notconfiguredpurposes[] = $purpose['purpose'];
-                continue;
-            }
-
+            $message = $purpose['errormessage'] ?? '';
             if (empty($message)) {
                 $message = get_string('error_aipurposeunavailable', 'quizaccess_ai', $purpose['purpose']);
             }
-
-            if ($message === $blockmessage) {
-                $blockedbycontrol[] = $purpose['purpose'];
-                continue;
-            }
             $unavailablemessages[] = $message;
-        }
-
-        if (!empty($blockedbycontrol)) {
-            $unavailablemessages[] = get_string(
-                'notallowedincourse',
-                'block_ai_control',
-                implode(', ', $blockedbycontrol)
-            );
-        }
-        if (!empty($notconfiguredpurposes)) {
-            $unavailablemessages[] = get_string(
-                'error_purposenotconfigured',
-                'local_ai_manager',
-                implode(', ', $notconfiguredpurposes)
-            );
         }
 
         if (!empty($unavailablemessages)) {
