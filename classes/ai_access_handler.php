@@ -59,7 +59,7 @@ class ai_access_handler {
                 continue;
             }
 
-            $message = $purpose['errormessage'] ?? '';
+            $message = $purpose['errormessage'];
             if (empty($message)) {
                 $message = get_string('error_aipurposeunavailable', 'quizaccess_ai', $purpose['purpose']);
             }
