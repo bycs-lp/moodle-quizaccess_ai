@@ -24,8 +24,8 @@ use core_privacy\local\metadata\null_provider;
  * This plugin does not store any personal data.
  *
  * @package   quizaccess_ai
- * @author    Thomas Schönlein
  * @copyright 2025 ISB Bayern
+ * @author    Thomas Schönlein
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements null_provider {
