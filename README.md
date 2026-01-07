@@ -12,8 +12,8 @@ This quiz accessrule prevents users from starting or continuing quiz attempts if
 ## Requirements
 
 - Moodle 5.0 or later.
-- `qtype_aitext` installed and enabled.
-- An AI manager backend installed and configured for `qtype_aitext`.
+- [`qtype_aitext`](https://moodle.org/plugins/qtype_aitext) installed and enabled.
+- An AI manager backend (e.g. [`local_ai_manager`](https://moodle.org/plugins/local_ai_manager)) installed and configured for `qtype_aitext`.
 - (Optional) A course-level control plugin if you want course-level AI restrictions to be enforced.
 
 ## Installing via uploaded ZIP file

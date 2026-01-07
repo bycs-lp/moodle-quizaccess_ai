@@ -14,18 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace quizaccess_ai\privacy;
+
+use core_privacy\local\metadata\null_provider;
+
 /**
- * Strings for the quizaccess_ai plugin.
+ * Privacy API null provider for quizaccess_ai.
  *
- * @package    quizaccess_ai
- * @copyright  2025 ISB Bayern
- * @author     Thomas Schönlein
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * This plugin does not store any personal data.
+ *
+ * @package   quizaccess_ai
+ * @copyright 2025 ISB Bayern
+ * @author    Thomas Schönlein
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$string['error_aimanagerunavailable'] = 'Die KI-Funktionalitäten stehen derzeit nicht zur Verfügung. Bitte wenden Sie sich an Ihren Tenant-Manager oder Admin.';
-$string['error_aipurposeunavailable'] = 'Der benötigte KI-Einsatzzweck "{$a}" ist nicht verfügbar.';
-$string['pluginname'] = 'KI-Verfügbarkeit';
-$string['privacy:metadata'] = 'Das Plugin quizaccess_ai speichert keine personenbezogenen Daten.';
+class provider implements null_provider {
+    #[\Override]
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}
