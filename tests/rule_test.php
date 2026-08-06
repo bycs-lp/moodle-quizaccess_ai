@@ -282,6 +282,53 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Ensures make() returns null when all aitext questions have autograde disabled.
+     *
+     * @covers ::make
+     */
+    public function test_make_returns_null_when_all_autograde_disabled(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        // This test requires qtype_aitext to be installed (it needs the DB table and test helper).
+        $dbman = $DB->get_manager();
+        if (!$dbman->table_exists('qtype_aitext')) {
+            $this->markTestSkipped('qtype_aitext is not installed.');
+        }
+
+        set_config('backend', 'local_ai_manager', 'qtype_aitext');
+        $handler = $this->createMock(ai_access_handler::class);
+        $handler->method('is_aitext_available')->willReturn(true);
+        $handler->method('is_ai_manager_available')->willReturn(true);
+        \core\di::set(ai_access_handler::class, $handler);
+
+        // Create a real course, quiz, and aitext question with autograde=0.
+        $course = $this->getDataGenerator()->create_course();
+        $quiz = $this->getDataGenerator()->create_module('quiz', ['course' => $course->id]);
+
+        /** @var \core_question_generator $questiongenerator */
+        $questiongenerator = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $category = $questiongenerator->create_question_category([
+            'contextid' => \context_course::instance($course->id)->id,
+        ]);
+        $questiondata = $questiongenerator->create_question('aitext', null, [
+            'category' => $category->id,
+        ]);
+
+        // Set autograde to 0.
+        $DB->set_field('qtype_aitext', 'autograde', 0, ['questionid' => $questiondata->id]);
+
+        quiz_add_quiz_question($questiondata->id, $quiz);
+
+        $quizobj = \mod_quiz\quiz_settings::create($quiz->id);
+        $result = \quizaccess_ai::make($quizobj, time(), false);
+
+        $this->assertNull($result, 'Rule should not apply when all aitext questions have autograde disabled.');
+
+        \core\di::set(ai_access_handler::class, new ai_access_handler());
+    }
+
+    /**
      * Builds a quiz_settings mock for the rule factory tests.
      *
      * @param bool $hasquestions
