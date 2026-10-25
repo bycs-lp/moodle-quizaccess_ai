@@ -21,6 +21,9 @@ use quizaccess_ai\ai_access_handler;
 /**
  * A rule preventing access to quiz if AI is not available.
  *
+ * When all aitext questions in the quiz have autograde disabled,
+ * this rule does not apply because AI is not needed at submission time.
+ *
  * @package   quizaccess_ai
  * @copyright 2025 ISB Bayern
  * @author    Thomas Schönlein
@@ -39,6 +42,11 @@ class quizaccess_ai extends access_rule_base {
             return null;
         }
 
+        // If all aitext questions have autograde disabled, AI is not needed at submission time.
+        if (self::all_aitext_autograde_disabled($quizobj)) {
+            return null;
+        }
+
         $handler = \core\di::get(ai_access_handler::class);
         if (!$handler->is_aitext_available()) {
             return null;
@@ -53,6 +61,49 @@ class quizaccess_ai extends access_rule_base {
             return null;
         }
         return new self($quizobj, $timenow);
+    }
+
+    /**
+     * Check whether all aitext questions in the quiz have autograde disabled.
+     *
+     * @param quiz_settings $quizobj The quiz settings object.
+     * @return bool True if all aitext questions have autograde=0.
+     */
+    protected static function all_aitext_autograde_disabled(quiz_settings $quizobj): bool {
+        global $DB;
+
+        // If the qtype_aitext table doesn't exist (plugin not installed), we can't check.
+        // In that case, assume autograde is enabled (don't skip the rule).
+        $dbman = $DB->get_manager();
+        if (!$dbman->table_exists('qtype_aitext')) {
+            return false;
+        }
+
+        $quizid = $quizobj->get_quiz()->id;
+
+        $sql = "SELECT DISTINCT q.id, qai.autograde
+                  FROM {quiz_slots} qs
+                  JOIN {question_references} qr ON qr.itemid = qs.id
+                       AND qr.component = 'mod_quiz' AND qr.questionarea = 'slot'
+                  JOIN {question_bank_entries} qbe ON qbe.id = qr.questionbankentryid
+                  JOIN {question_versions} qv ON qv.questionbankentryid = qbe.id
+                  JOIN {question} q ON q.id = qv.questionid
+                  JOIN {qtype_aitext} qai ON qai.questionid = q.id
+                 WHERE qs.quizid = :quizid AND q.qtype = 'aitext'";
+
+        $records = $DB->get_records_sql($sql, ['quizid' => $quizid]);
+
+        if (empty($records)) {
+            return true;
+        }
+
+        foreach ($records as $record) {
+            if (!empty($record->autograde)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     #[\Override]
