@@ -111,11 +111,11 @@ class ai_access_handler {
 
     /**
      * Required AI purposes for this rule.
-     * These are the purposes qtype_aitext needs when using local_ai_manager.
+     * Only the feedback purpose is needed for qtype_aitext when using local_ai_manager.
      *
      * @return array
      */
     public function get_aitext_required_purposes(): array {
-        return ['feedback', 'translate'];
+        return ['feedback'];
     }
 }

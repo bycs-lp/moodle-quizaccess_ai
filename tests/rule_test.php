@@ -248,6 +248,19 @@ final class rule_test extends \advanced_testcase {
     }
 
     /**
+     * Ensures only the feedback purpose is required for qtype_aitext, translate is no longer needed.
+     *
+     * @covers \quizaccess_ai\ai_access_handler::get_aitext_required_purposes
+     */
+    public function test_required_purposes_contain_only_feedback(): void {
+        $handler = new ai_access_handler();
+
+        $requiredpurposes = $handler->get_aitext_required_purposes();
+
+        $this->assertSame(['feedback'], $requiredpurposes);
+    }
+
+    /**
      * Creates the rule and injects the provided handler.
      *
      * @param ai_access_handler $handler
