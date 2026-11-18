@@ -27,9 +27,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-$plugin->version   = 2026050800;
+$plugin->version   = 2026111800;
 $plugin->requires  = 2025041400;
 $plugin->supported = [500, 503];
-$plugin->release = '1.2';
+$plugin->release = '1.3';
 $plugin->component = 'quizaccess_ai';
 $plugin->maturity = MATURITY_BETA;
